@@ -1,58 +1,18 @@
-const express = require('express');
-const patientModel = require('../model/patient.model');
+const express = require("express");
+const patientController = require("../controller/patient.controller");
+const upload = require('../middleware/upload.middleware');
+
 const router = express.Router();
 
-//Add Patient 
-router.post('/', async (req, res) => {
-    try {
-        const newPatient = new patientModel(req.body);
-        const savedPatient = await newPatient.save();
-        res.json(savedPatient);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
+// Define '/enrolled' routes BEFORE '/:id'
+router.put("/enrolled/:id", patientController.enrollPatient);
+router.get("/enrolled", patientController.getEnrolledPatients);
 
-//Get All Patients
-router.get('/', async (req, res) => {
-    try {
-        const patients = await patientModel.find();
-        res.json(patients);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
+// CRUD Routes
+router.post("/create", upload.single("image"), patientController.createPatient);
+router.get("/", patientController.getAllPatients);
+router.get("/:id", patientController.getSinglePatient);
+router.put("/:id", patientController.updatePatient);
+router.delete("/:id", patientController.deletePatient);
 
-//Get Single Patient
-router.get('/:id', getPatient, (req, res) => {
-    res.json(res.patient);
-});
-
-//Update Patient
-router.patch('/:id', getPatient, async (req, res) => {
-    if (req.body.name || req.body.dob || req.body.address || req.body.phone) {
-        res.patient.name = req.body.name;
-        res.patient.dob = req.body.dob;
-        res.patient.address = req.body.address;
-        res.patient.phone = req.body.phone;
-
-        try {
-            const updatedPatient = await res.patient.save();
-            res.json(updatedPatient);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    } else {
-        res.status(400).json({ message: 'No valid updates provided' });
-    }
-});
-
-//Delete Patient
-router.delete('/:id', getPatient, async (req, res) => {
-    try {
-        await res.patient.remove();
-        res.json({ message: 'Patient deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+module.exports = router;

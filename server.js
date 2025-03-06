@@ -1,22 +1,23 @@
-require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const dotenv = require('dotenv');
+const connectDB = require('./config/db');
+const errorHandler = require('./middleware/errorMiddleware');
+const route = require('./routes/patient.route');
+const authRoute = require('./routes/auth.route');
 
-const router = require('./routes/patient.route');
+dotenv.config();
+connectDB();
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+// Serve uploaded images
+app.use('/uploads', express.static('uploads'));
 
-mongoose.connect(process.env.MONGDB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log("MongoDB Connected"))
-    .catch((err) => console.log(err));
-
-app.use('/api/patient', router);
+app.use('/api/v1/patient', route);
+app.use("/api/v1/auth", authRoute);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 8081;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
